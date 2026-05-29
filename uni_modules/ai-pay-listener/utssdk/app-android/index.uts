@@ -1,0 +1,53 @@
+import Context from "android.content.Context";
+import Intent from "android.content.Intent";
+import IntentFilter from "android.content.IntentFilter";
+import BroadcastReceiver from "android.content.BroadcastReceiver";
+import { UTSAndroid } from "io.dcloud.uts";
+
+let paymentReceiver: PaymentBroadcastReceiver | null = null;
+type PaymentCallback = (title: string, text: string, pkg: string) => void;
+let callbackFunc: PaymentCallback | null = null;
+
+// 定义广播接收器
+class PaymentBroadcastReceiver extends BroadcastReceiver {
+    constructor() {
+        super();
+    }
+
+    override onReceive(context: Context, intent: Intent) {
+        if (intent.getAction() == "com.ai.notification.PAYMENT_RECEIVED") {
+            let title = intent.getStringExtra("title") ?? "";
+            let text = intent.getStringExtra("text") ?? "";
+            let pkg = intent.getStringExtra("package") ?? "";
+            
+            if (callbackFunc != null) {
+                callbackFunc!(title, text, pkg);
+            }
+        }
+    }
+}
+
+/**
+ * 监听支付通知
+ */
+export function startListenPayment(callback: (title: string, text: string, pkg: string) => void) {
+    if (paymentReceiver == null) {
+        paymentReceiver = new PaymentBroadcastReceiver();
+        callbackFunc = callback;
+        
+        let filter = new IntentFilter();
+        filter.addAction("com.ai.notification.PAYMENT_RECEIVED");
+        
+        // 注册广播
+        UTSAndroid.getAppContext()?.registerReceiver(paymentReceiver, filter);
+    }
+}
+
+/**
+ * 跳转到系统通知读取权限设置页
+ */
+export function gotoNotificationAccessSettings() {
+    let intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    UTSAndroid.getAppContext()?.startActivity(intent);
+}

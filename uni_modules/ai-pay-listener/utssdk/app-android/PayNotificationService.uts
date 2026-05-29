@@ -1,0 +1,40 @@
+import NotificationListenerService from "android.service.notification.NotificationListenerService";
+import StatusBarNotification from "android.service.notification.StatusBarNotification";
+import Intent from "android.content.Intent";
+
+export class PayNotificationService extends NotificationListenerService {
+    
+    constructor() {
+        super();
+    }
+
+    override onNotificationPosted(sbn: StatusBarNotification) {
+        let packageName = sbn.getPackageName();
+        
+        // 过滤微信和支付宝的包名
+        if (packageName == "com.tencent.mm" || packageName == "com.eg.android.AlipayGphone") {
+            let notification = sbn.getNotification();
+            if (notification != null && notification.extras != null) {
+                let extras = notification.extras;
+                let title = extras.getString("android.title") ?? "";
+                let text = extras.getString("android.text") ?? "";
+                
+                // 简单的特征词过滤：只要含有支付、收款、元等关键字
+                if (text.includes("支付") || text.includes("收款") || text.includes("元")) {
+                    
+                    // 将拿到得通知信息通过广播发给前端
+                    let intent = new Intent("com.ai.notification.PAYMENT_RECEIVED");
+                    intent.putExtra("title", title);
+                    intent.putExtra("text", text);
+                    intent.putExtra("package", packageName);
+                    
+                    this.sendBroadcast(intent);
+                }
+            }
+        }
+    }
+
+    override onNotificationRemoved(sbn: StatusBarNotification) {
+        // 通知被移除时触发，我们不需要管
+    }
+}

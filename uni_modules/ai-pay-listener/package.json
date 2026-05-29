@@ -1,0 +1,16 @@
+{
+    "id": "ai-pay-listener",
+    "displayName": "AI付款通知监听插件",
+    "version": "1.0.0",
+    "description": "监听微信和支付宝的通知弹窗信息，用于记账",
+    "uni_modules": {
+        "platforms": {
+            "client": {
+                "App": {
+                    "app-vue": "y",
+                    "app-nvue": "y"
+                }
+            }
+        }
+    }
+}
